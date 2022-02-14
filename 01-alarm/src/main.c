@@ -30,6 +30,10 @@ static size_t readline() {
 
 /// Handles one option in the main menu, returns false if the option was unrecognized
 bool handle_menu_option(char c) {
+
+    // Before handling the operation, do a cleanup of exited alarm forks
+    cleanup_zombies();
+
     switch (c)
     {
         case 's':
@@ -44,6 +48,7 @@ bool handle_menu_option(char c) {
             break;
 
         case 'l':
+            list_alarms();
             break;
 
         case 'c':
@@ -66,6 +71,7 @@ int main() {
     while(1) {
         printf("> ");
         int read = readline();
+        if (read == 0) continue; //Just pressing enter is ok
         if (read == 1 && handle_menu_option(line[0]))
             continue;
         printf("Invalid option\n");

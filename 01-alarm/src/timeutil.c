@@ -1,14 +1,19 @@
 #include "timeutil.h"
 #include <stdio.h>
 
-// Gives the current time as a c string. The memory does not need to be freed.
+// Gives the given time as a c string. The memory does not need to be freed.
 // Subsequent calls will invalidate the string returned from previous calls
+char* time_as_string(time_t time) {
+    static char buffer[30];
+    strftime(buffer, sizeof(buffer), "%F %T", localtime(&time));
+    return buffer;
+}
+
+// Helper function to get the current time as a string using time_as_string's buffer
 char* now_as_string() {
     time_t now;
     time(&now);
-    static char buffer[30];
-    strftime(buffer, sizeof(buffer), "%F %T", localtime(&now));
-    return buffer;
+    return time_as_string(now);
 }
 
 // Parses the provided time in the local time zone into a unix epoc stored in target
@@ -17,16 +22,8 @@ char* now_as_string() {
 // Returns TIME_FAILED on failure
 time_t parse_time(char *string) {
     struct tm time;
-    char dummy_char;
-    int scanned = sscanf(string, "%4d-%2d-%2d %2d:%2d:%2d%c",
-                         &time.tm_year, &time.tm_mon, &time.tm_mday,
-                         &time.tm_hour, &time.tm_min, &time.tm_sec,
-                         &dummy_char);
-    if (scanned != 6) // We didn't read all the fields, or read too many!
+    char* not_read = strptime(string, "%F %T", &time);
+    if (not_read == NULL || *not_read != '\0')
         return TIME_FAILED;
-
-    time.tm_isdst = -1; //use timezone info to handle summertime
-    time.tm_year -= 1900; // this field is years since 1900
-    time.tm_mon -= 1; //january is month 0
     return mktime(&time);
 }
