@@ -1,7 +1,7 @@
 CFLAGS+=-g -Iinclude
 
 CFILES:=$(wildcard src/*.c)
-OFILES:=$(pathsubst src/%.c build/%.o $(CFILES))
+OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
 
 .PHONY: all clean
 
