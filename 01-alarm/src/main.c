@@ -1,56 +1,72 @@
 #include <stdio.h>
-#include <time.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 #include "timeutil.h"
 
-// 1. meny rutine
+// A helper function for reading one line from stdin.
+// It will also consume the trailing newline, but not include it in the output string.
+// Returns the length of the read string, excluding newline and 0-terminator.
+// If EOF is reached, or a super long line is entered, the function never returns, and exit is called
+static char line[256];
+static size_t readline() {
 
-// 2. Datalagring
+    // reads until it reads an EOF, a newline, or buffer is full
+    char* result = fgets(line, sizeof(line), stdin);
+    if(result == NULL)
+        exit(EXIT_FAILURE);
 
-// 3. Alarm planlegging
+    // how long was the line we read?
+    size_t len = strlen(line);
 
-// 4. Avbryting av alarmer
+    // did we actually read a line? Only if line ends in \n
+    if(line[len-1] != '\n')
+        exit(EXIT_FAILURE);
 
-// 5. Fang zombiene!
+    line[len-1]='\0'; //ignore the newline itself by moving null-terminator
+    return len-1;
+}
 
-// 6. En ordentlig ringelyd
+/// Handles one option in the main menu, returns false if the option was unrecognized
+bool handle_menu_option(char c) {
+    switch (c)
+    {
+        case 's':
+            printf("Schedule alarm at which date and time? ");
+            readline();
+            time_t time = parse_time(line);
+            if (time == TIME_FAILED) {
+                printf("Time is incorrectly formated!\n");
+                break;
+            }
+            printf("Scheduling alarm in %d seconds\n", time);
+            break;
 
-// 7. Test case dokumentasjon
+        case 'l':
+            break;
 
-void menu() {
-    char input[2];
+        case 'c':
+            break;
 
+        case 'x':
+            printf("Goodbye!\n");
+            exit(EXIT_SUCCESS);
+
+        default:
+            return false;
+    }
+    return true;
+}
+
+int main() {
     printf("Welcome to the alarm clock! It is currently %s\n", now_as_string());
     printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit)\n");
 
-prompt:
-    printf("> ");
-    scanf("%1s", input);
-
-    switch (input[0])
-    {
-    case 's':
-        printf("hei magnus\n");
-        break;
-    
-    case 'l':
-        break;
-
-    case 'c':
-        break;
-
-    case 'x':
-        printf("Goodbye!\n");
-        return;
-
-    default:
-        printf("Please enter a valid input.\n");
-        break;
+    while(1) {
+        printf("> ");
+        int read = readline();
+        if (read == 1 && handle_menu_option(line[0]))
+            continue;
+        printf("Invalid option\n");
     }
-    goto prompt;
-}
-
-
-int main() {
-    menu();
-    return 0;
 }
