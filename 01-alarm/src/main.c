@@ -22,6 +22,7 @@ void menu() {
     printf("Welcome to the alarm clock! It is currently %s\n", now_as_string());
     printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit)\n");
 
+prompt:
     printf("> ");
     scanf("%1s", input);
 
@@ -31,9 +32,21 @@ void menu() {
         printf("hei magnus\n");
         break;
     
+    case 'l':
+        break;
+
+    case 'c':
+        break;
+
+    case 'x':
+        printf("Goodbye!\n");
+        return;
+
     default:
+        printf("Please enter a valid input.\n");
         break;
     }
+    goto prompt;
 }
 
 
