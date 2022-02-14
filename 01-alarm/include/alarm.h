@@ -9,4 +9,6 @@ typedef struct {
 
 #define MAX_ALARMS 20
 
+void add_alarm(time_t target_time);
+
 #endif // ALARM_H_

@@ -24,5 +24,9 @@ time_t parse_time(char *string) {
                          &dummy_char);
     if (scanned != 6) // We didn't read all the fields, or read too many!
         return TIME_FAILED;
+
+    time.tm_isdst = -1; //use timezone info to handle summertime
+    time.tm_year -= 1900; // this field is years since 1900
+    time.tm_mon -= 1; //january is month 0
     return mktime(&time);
 }

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "timeutil.h"
+#include "alarm.h"
 
 // A helper function for reading one line from stdin.
 // It will also consume the trailing newline, but not include it in the output string.
@@ -34,12 +35,12 @@ bool handle_menu_option(char c) {
         case 's':
             printf("Schedule alarm at which date and time? ");
             readline();
-            time_t time = parse_time(line);
-            if (time == TIME_FAILED) {
+            time_t target_time = parse_time(line);
+            if (target_time == TIME_FAILED) {
                 printf("Time is incorrectly formated!\n");
                 break;
             }
-            printf("Scheduling alarm in %d seconds\n", time);
+            add_alarm(target_time);
             break;
 
         case 'l':
