@@ -31,8 +31,7 @@ void add_alarm(time_t target_time) {
     }
 
     // Make sure the alarm is acutally in the future
-    time_t now;
-    time(&now);
+    time_t now = time(NULL);
     if (target_time <= now) {
         printf("An alarm must be set in the future!");
         return;

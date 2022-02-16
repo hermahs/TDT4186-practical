@@ -11,8 +11,7 @@ char* time_as_string(time_t time) {
 
 // Helper function to get the current time as a string using time_as_string's buffer
 char* now_as_string() {
-    time_t now;
-    time(&now);
+    time_t now = time(NULL);
     return time_as_string(now);
 }
 
@@ -22,6 +21,7 @@ char* now_as_string() {
 // Returns TIME_FAILED on failure
 time_t parse_time(char *string) {
     struct tm time;
+    time.tm_isdst = -1;
     char* not_read = strptime(string, "%F %T", &time);
     if (not_read == NULL || *not_read != '\0')
         return TIME_FAILED;
