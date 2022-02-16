@@ -4,15 +4,19 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include <assert.h>
 #include "timeutil.h"
 
-// Global list of active variables
-// Can contain finished alarms (zombies), until they get cleaned up
-Alarm alarms[MAX_ALARMS];
-int alarm_count;
+#define MAX(a, b) ((a)>(b)?(a):(b))
 
-static pid_t spawn_alarm(int alarm, time_t sleep_time) {
+// Global list of active alarms.
+// Can contain finished alarms (zombies), until they get cleaned up.
+// Once an alarm gets cleaned up its pid gets set to 0, ready to be overridden.
+// An extra sentinal 0-alarm is added past the end, to allow overshooting.
+Alarm alarms[MAX_ALARMS+1];
+
+static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
 
     pid_t pid = fork();
     if (pid == 0) { // child process
@@ -25,7 +29,13 @@ static pid_t spawn_alarm(int alarm, time_t sleep_time) {
 }
 
 void add_alarm(time_t target_time) {
-    if (alarm_count >= MAX_ALARMS) {
+    cleanup_zombies();
+
+    // Find an opening in the alarm list, or stop at the sentinel
+    int alarm_index = 0;
+    while (alarms[alarm_index].pid)
+        alarm_index++;
+    if (alarm_index >= MAX_ALARMS) {
         printf("Alarm list is full!");
         return;
     }
@@ -43,45 +53,73 @@ void add_alarm(time_t target_time) {
 
     // Store the alarm's target time
     // Only used when printing the alarm list
-    alarms[alarm_count].time = target_time;
+    alarms[alarm_index].time = target_time;
     // Start the alarm frok and save its process id
-    alarms[alarm_count].pid = spawn_alarm(alarm_count, seconds_left);
-    alarm_count++;
+    alarms[alarm_index].pid = spawn_alarm(alarm_index, seconds_left);
 }
 
+// Packs and sorts the alarm list by increasing ringing time
+// Alarms with pid = 0 get placed at the very end
+static int alarm_compare(const void* av, const void* bv) {
+    const Alarm *a = av, *b = bv;
+    // at and bt are the correct times for active alarms, and highest times for inactive
+    time_t at = a->pid ? a->time : MAX(a->time,b->time)+1;
+    time_t bt = b->pid ? b->time : MAX(a->time,b->time)+1;
+    return at - bt;
+}
+
+// Shows a numbered list of current alarms, in increasing time of ringing
 void list_alarms() {
-    printf("There are %d active alarms:\n", alarm_count);
-    for(int i = 0; i < alarm_count; i++)
-        printf("Alarm %2d at %s\n", (i+1), time_as_string(alarms[i].time));
+    cleanup_zombies();
+    qsort(alarms, MAX_ALARMS, sizeof(Alarm), alarm_compare);
+
+    // Keep printing alarms until the first inactive alarm, or the sentinel alarm
+    for (int i = 0; i < MAX_ALARMS; i++)
+        if (alarms[i].pid)
+            printf("Alarm %2d at %s\n", (i+1), time_as_string(alarms[i].time));
 }
 
-// Does a linear pass across the alarm list, and removes all alarms where the pid is 0
-static void remove_alarms_with_pid0() {
+static void kill_alarm(int i) {
+    assert(alarms[i].pid);
+    printf("Cancelling alarm that would ring at %s\n", time_as_string(alarms[i].time));
+    kill(alarms[i].pid, SIGKILL);
+}
 
-    // this is the array slot we move items to, which will have no holes
-    int target = 0;
-    // no need to move anything until target is in a hole, and needs to be filled
-    while(target < alarm_count && alarms[target].pid) target++;
-
-    // go though the items that come after the hole, and fill in
-    for(int from = target; from < alarm_count; from++) {
-        if(alarms[from].pid)
-            alarms[target++] = alarms[from];
+// Lets you cancel alarms
+// The alarm_number is 1-indexed, and the number is the same
+// as the number printed at the last call to list_alarms(),
+// even if the list has changed since then
+void cancel_alarm(int alarm_number) {
+    cleanup_zombies();
+    alarm_number -= 1; // We 0-index internally
+    if (alarm_number < 0 || alarm_number >= MAX_ALARMS
+       || alarms[alarm_number].pid == 0) {
+        printf("Not a valid alarm number!\n");
+        return;
     }
+    kill_alarm(alarm_number);
+}
 
-    // the new size now that all holes are filled
-    alarm_count = target;
+// Kills all active alarms that are still active
+void cancel_all_alarms() {
+    cleanup_zombies();
+    for (int i = 0; i < MAX_ALARMS; i++)
+        if (alarms[i].pid)
+            kill_alarm(i);
+    cleanup_zombies();
 }
 
 // Checks all forks to see if they have finished.
-// if so, removes them from the alarm list
+// if so, clears them from the alarm list by setting pid = 0
 void cleanup_zombies() {
-    for(int i = 0; i < alarm_count; i++) {
+    for (int i = 0; i < MAX_ALARMS; i++) {
+        if (alarms[i].pid == 0)
+            continue;
+
         int wstatus;
         // waitpid returns a positive number if the process has changed
         if(waitpid(alarms[i].pid, &wstatus, WNOHANG) > 0)
             if(WIFEXITED(wstatus) || WIFSIGNALED(wstatus))
-                alarms[i].pid = 0; //mark for deletion
+                alarms[i].pid = 0; //mark inactive
     }
-    remove_alarms_with_pid0();
 }

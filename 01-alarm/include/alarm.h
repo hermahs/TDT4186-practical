@@ -15,6 +15,10 @@ void add_alarm(time_t target_time);
 
 void list_alarms();
 
+void cancel_alarm(int alarm_number);
+
+void cancel_all_alarms();
+
 void cleanup_zombies();
 
 #endif // ALARM_H_

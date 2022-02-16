@@ -30,10 +30,6 @@ static size_t readline() {
 
 /// Handles one option in the main menu, returns false if the option was unrecognized
 bool handle_menu_option(char c) {
-
-    // Before handling the operation, do a cleanup of exited alarm forks
-    cleanup_zombies();
-
     switch (c)
     {
         case 's':
@@ -52,10 +48,18 @@ bool handle_menu_option(char c) {
             break;
 
         case 'c':
+            printf("Cancel which alarm? ");
+            readline();
+            int alarm_number; char dummy_char;
+            if(sscanf(line, "%d%c", &alarm_number, &dummy_char) == 1)
+                cancel_alarm(alarm_number);
+            else
+                printf("Please enter a number");
             break;
 
         case 'x':
             printf("Goodbye!\n");
+            cancel_all_alarms();
             exit(EXIT_SUCCESS);
 
         default:
