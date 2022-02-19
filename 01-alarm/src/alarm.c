@@ -16,28 +16,32 @@
 // An extra sentinal 0-alarm is added past the end, to allow overshooting.
 Alarm alarms[MAX_ALARMS+1];
 
+char* sounds[SOUND_COUNT] = {
+    "../audio/windows-xp-startup.mp3",
+    "../audio/Alarm-clock-bell-ringing-sound-effect.mp3",
+    "../audio/Alarm-clock-bell-ringing-sound-effect.mp3"
+};
+
+// Takes a 1-indexed sound number, and tries replaces the current process with playing it
+static int play_sound(int sound_number) {
+    sound_number -= 1;
+    assert(sound_number >= 0 && sound_number < SOUND_COUNT);
+
+    char* args[] = {"mpg123", sounds[sound_number], NULL};
+
+    return execvp("mpg123", args);
+}
+
 static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
 
     pid_t pid = fork();
     if (pid == 0) { // child process
         sleep(sleep_time);
         play_sound(alarms[alarm_index].sound_number);
-        exit(EXIT_SUCCESS); // The child is done now!
+        exit(EXIT_FAILURE); // In case execvp fails
     }
 
     return pid;
-}
-
-void play_sound(int sound_number) {
-    char* sounds[] = {
-        "../audio/windows-xp-startup.mp3",
-        "../audio/Alarm-clock-bell-ringing-sound-effect.mp3",
-        "../audio/Alarm-clock-bell-ringing-sound-effect.mp3"
-    };
-
-    char* args[] = {"mpg123", sounds[sound_number - 1], NULL};
-
-    execvp("mpg123", args);
 }
 
 void add_alarm(time_t target_time, int sound_number) {
@@ -49,6 +53,11 @@ void add_alarm(time_t target_time, int sound_number) {
         alarm_index++;
     if (alarm_index >= MAX_ALARMS) {
         printf("Alarm list is full!");
+        return;
+    }
+
+    if (sound_number < 1 || sound_number > SOUND_COUNT) {
+        printf("Not a valid choice for sound!\n");
         return;
     }
 
@@ -66,10 +75,10 @@ void add_alarm(time_t target_time, int sound_number) {
     // Store the alarm's target time
     // Only used when printing the alarm list
     alarms[alarm_index].time = target_time;
-    // Start the alarm frok and save its process id
-    alarms[alarm_index].pid = spawn_alarm(alarm_index, seconds_left);
     // store alarm sound
     alarms[alarm_index].sound_number = sound_number;
+    // Start the alarm frok and save its process id
+    alarms[alarm_index].pid = spawn_alarm(alarm_index, seconds_left);
 }
 
 // Packs and sorts the alarm list by increasing ringing time

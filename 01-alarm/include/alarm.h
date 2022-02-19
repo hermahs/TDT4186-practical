@@ -11,6 +11,7 @@ typedef struct {
 } Alarm;
 
 #define MAX_ALARMS 20
+#define SOUND_COUNT 3
 
 void add_alarm(time_t target_time, int sound_number);
 
@@ -21,7 +22,5 @@ void cancel_alarm(int alarm_number);
 void cancel_all_alarms();
 
 void cleanup_zombies();
-
-void play_sound(int sound_number);
 
 #endif // ALARM_H_

@@ -40,15 +40,16 @@ bool handle_menu_option(char c) {
                 printf("Time is incorrectly formated!\n");
                 break;
             }
-            printf("Select the sound for your alarm (1-3, default 1): ");
+            printf("Select the sound for your alarm (1-%d, default 1): ", SOUND_COUNT);
             int input_len = readline();
             int sound_number;
             if (input_len == 0) sound_number = 1;
-            else sound_number = line[0] - '0';
-            if (sound_number > 3 || sound_number < 1) {
-                printf("Not a valid input for sound!\n");
+            else if(input_len == 1) sound_number = line[0]-'0';
+            else {
+                printf("Not a valid number entry!\n");
                 break;
             }
+
             add_alarm(target_time, sound_number);
             break;
 
