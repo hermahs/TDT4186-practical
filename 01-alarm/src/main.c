@@ -46,7 +46,7 @@ bool handle_menu_option(char c) {
             if (input_len == 0) sound_number = 1;
             else sound_number = line[0] - '0';
             if (sound_number > 3 || sound_number < 1) {
-                printf("Not a valid alarm sound!\n");
+                printf("Not a valid input for sound!\n");
                 break;
             }
             add_alarm(target_time, sound_number);
