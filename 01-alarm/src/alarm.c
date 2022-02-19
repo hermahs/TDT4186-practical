@@ -21,14 +21,26 @@ static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
     pid_t pid = fork();
     if (pid == 0) { // child process
         sleep(sleep_time);
-        printf("RING from alarm\n");
+        play_sound(alarms[alarm_index].sound_number);
         exit(EXIT_SUCCESS); // The child is done now!
     }
 
     return pid;
 }
 
-void add_alarm(time_t target_time) {
+void play_sound(int sound_number) {
+    char* sounds[] = {
+        "../audio/windows-xp-startup.mp3",
+        "../audio/Alarm-clock-bell-ringing-sound-effect.mp3",
+        "../audio/Alarm-clock-bell-ringing-sound-effect.mp3"
+    };
+
+    char* args[] = {"mpg123", sounds[sound_number - 1], NULL};
+
+    execvp("mpg123", args);
+}
+
+void add_alarm(time_t target_time, int sound_number) {
     cleanup_zombies();
 
     // Find an opening in the alarm list, or stop at the sentinel
@@ -49,13 +61,15 @@ void add_alarm(time_t target_time) {
 
     // Print the number of seconds left
     time_t seconds_left = target_time - now;
-    printf("Scheduling alarm in %d seconds\n", seconds_left);
+    printf("Scheduling alarm in %ld seconds\n", seconds_left);
 
     // Store the alarm's target time
     // Only used when printing the alarm list
     alarms[alarm_index].time = target_time;
     // Start the alarm frok and save its process id
     alarms[alarm_index].pid = spawn_alarm(alarm_index, seconds_left);
+    // store alarm sound
+    alarms[alarm_index].sound_number = sound_number;
 }
 
 // Packs and sorts the alarm list by increasing ringing time
