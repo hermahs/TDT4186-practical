@@ -64,7 +64,7 @@ bool handle_menu_option(char c) {
             if(sscanf(line, "%d%c", &alarm_number, &dummy_char) == 1)
                 cancel_alarm(alarm_number);
             else
-                printf("Please enter a number");
+                printf("Not a valid number entry!\n");
             break;
 
         case 'x':

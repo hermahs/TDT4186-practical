@@ -17,9 +17,9 @@
 Alarm alarms[MAX_ALARMS+1];
 
 char* sounds[SOUND_COUNT] = {
-    "../audio/windows-xp-startup.mp3",
-    "../audio/Alarm-clock-bell-ringing-sound-effect.mp3",
-    "../audio/Alarm-clock-bell-ringing-sound-effect.mp3"
+    "audio/windows-xp-startup.mp3",
+    "audio/Alarm-clock-bell-ringing-sound-effect.mp3",
+    "audio/Alarm-clock-bell-ringing-sound-effect.mp3"
 };
 
 // Takes a 1-indexed sound number, and tries replaces the current process with playing it
@@ -27,8 +27,7 @@ static int play_sound(int sound_number) {
     sound_number -= 1;
     assert(sound_number >= 0 && sound_number < SOUND_COUNT);
 
-    char* args[] = {"mpg123", sounds[sound_number], NULL};
-
+    char* args[] = {"mpg123", "-q", sounds[sound_number], NULL};
     return execvp("mpg123", args);
 }
 
@@ -37,6 +36,7 @@ static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
     pid_t pid = fork();
     if (pid == 0) { // child process
         sleep(sleep_time);
+        printf("RING RING!\n");
         play_sound(alarms[alarm_index].sound_number);
         exit(EXIT_FAILURE); // In case execvp fails
     }
@@ -96,6 +96,7 @@ void list_alarms() {
     cleanup_zombies();
     qsort(alarms, MAX_ALARMS, sizeof(Alarm), alarm_compare);
 
+    printf("Active alarms:\n");
     // Keep printing alarms until the first inactive alarm, or the sentinel alarm
     for (int i = 0; i < MAX_ALARMS; i++)
         if (alarms[i].pid)
