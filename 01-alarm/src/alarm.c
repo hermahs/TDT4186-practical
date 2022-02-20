@@ -72,11 +72,10 @@ void add_alarm(time_t target_time, int sound_number) {
     time_t seconds_left = target_time - now;
     printf("Scheduling alarm in %ld seconds\n", seconds_left);
 
-    // Store the alarm's target time
-    // Only used when printing the alarm list
+    // Store the alarm's target time, only used when printing the alarm list
     alarms[alarm_index].time = target_time;
-    // store alarm sound
     alarms[alarm_index].sound_number = sound_number;
+    alarms[alarm_index].has_been_listed = false;
     // Start the alarm frok and save its process id
     alarms[alarm_index].pid = spawn_alarm(alarm_index, seconds_left);
 }
@@ -98,9 +97,12 @@ void list_alarms() {
 
     printf("Active alarms:\n");
     // Keep printing alarms until the first inactive alarm, or the sentinel alarm
-    for (int i = 0; i < MAX_ALARMS; i++)
-        if (alarms[i].pid)
+    for (int i = 0; i < MAX_ALARMS; i++) {
+        if (alarms[i].pid) {
+            alarms[i].has_been_listed = true;
             printf("Alarm %2d at %s\n", (i+1), time_as_string(alarms[i].time));
+        }
+    }
 }
 
 static void kill_alarm(int i) {
@@ -119,6 +121,12 @@ void cancel_alarm(int alarm_number) {
     if (alarm_number < 0 || alarm_number >= MAX_ALARMS
        || alarms[alarm_number].pid == 0) {
         printf("Not a valid alarm number!\n");
+        return;
+    }
+    if (!alarms[alarm_number].has_been_listed) {
+        printf("The alarm you are trying to cancel has never been listed. Generating new list.\n");
+        list_alarms();
+        printf("If you still want to cancel the alarm, find it on the list above.\n");
         return;
     }
     kill_alarm(alarm_number);

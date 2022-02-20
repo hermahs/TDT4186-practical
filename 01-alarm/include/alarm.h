@@ -3,11 +3,13 @@
 
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 typedef struct {
     time_t time;
     pid_t pid;
     int sound_number;
+    bool has_been_listed;
 } Alarm;
 
 #define MAX_ALARMS 20
