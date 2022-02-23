@@ -19,7 +19,7 @@ Alarm alarms[MAX_ALARMS+1];
 char* sounds[SOUND_COUNT] = {
     "audio/windows-xp-startup.mp3",
     "audio/Alarm-clock-bell-ringing-sound-effect.mp3",
-    "audio/Alarm-clock-bell-ringing-sound-effect.mp3"
+    "audio/lobby-classic-game-halloween.mp3"
 };
 
 // Takes a 1-indexed sound number, and tries replaces the current process with playing it
@@ -27,18 +27,19 @@ static int play_sound(int sound_number) {
     sound_number -= 1;
     assert(sound_number >= 0 && sound_number < SOUND_COUNT);
 
-    char* args[] = {"mpg123", "-q", sounds[sound_number], NULL};
+    // Use -n to provide a max length
+    char* args[] = {"mpg123", "-n353", "-q", sounds[sound_number], NULL};
     return execvp("mpg123", args);
 }
 
 static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
-
     pid_t pid = fork();
     if (pid == 0) { // child process
         sleep(sleep_time);
         printf("RING RING!\n");
+        fflush(stdout);
         play_sound(alarms[alarm_index].sound_number);
-        exit(EXIT_FAILURE); // In case execvp fails
+        _exit(EXIT_FAILURE); // In case execvp fails. Does /not/ call atexit callbacks
     }
 
     return pid;
@@ -52,7 +53,7 @@ void add_alarm(time_t target_time, int sound_number) {
     while (alarms[alarm_index].pid)
         alarm_index++;
     if (alarm_index >= MAX_ALARMS) {
-        printf("Alarm list is full!");
+        printf("Alarm list is full!\n");
         return;
     }
 
@@ -64,7 +65,7 @@ void add_alarm(time_t target_time, int sound_number) {
     // Make sure the alarm is acutally in the future
     time_t now = time(NULL);
     if (target_time <= now) {
-        printf("An alarm must be set in the future!");
+        printf("An alarm must be set in the future!\n");
         return;
     }
 
@@ -72,7 +73,8 @@ void add_alarm(time_t target_time, int sound_number) {
     time_t seconds_left = target_time - now;
     printf("Scheduling alarm in %ld seconds\n", seconds_left);
 
-    // Store the alarm's target time, only used when printing the alarm list
+    // Store the alarm's target time, only used when printing the alarm list.
+    // VERY important that all this data gets stored in the array before the fork happens
     alarms[alarm_index].time = target_time;
     alarms[alarm_index].sound_number = sound_number;
     alarms[alarm_index].has_been_listed = false;
@@ -135,10 +137,12 @@ void cancel_alarm(int alarm_number) {
 // Kills all active alarms that are still active
 void cancel_all_alarms() {
     cleanup_zombies();
-    for (int i = 0; i < MAX_ALARMS; i++)
-        if (alarms[i].pid)
-            kill_alarm(i);
-    cleanup_zombies();
+    for (int i = 0; i < MAX_ALARMS; i++) {
+        if (!alarms[i].pid)
+            continue;
+        kill_alarm(i);
+        waitpid(alarms[i].pid, NULL, 0); // Wait for signal to terminate
+    }
 }
 
 // Checks all forks to see if they have finished.
@@ -147,11 +151,8 @@ void cleanup_zombies() {
     for (int i = 0; i < MAX_ALARMS; i++) {
         if (alarms[i].pid == 0)
             continue;
-
-        int wstatus;
         // waitpid returns a positive number if the process has changed
-        if(waitpid(alarms[i].pid, &wstatus, WNOHANG) > 0)
-            if(WIFEXITED(wstatus) || WIFSIGNALED(wstatus))
-                alarms[i].pid = 0; //mark inactive
+        if (waitpid(alarms[i].pid, NULL, WNOHANG) > 0)
+            alarms[i].pid = 0; //mark inactive
     }
 }
