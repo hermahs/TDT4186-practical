@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <string.h>
 
 int main(int argc, char *argv[]) {
 
     int socket_desc, client_socket, read_size;
-    char buffer[400];
+    char buffer[6000];
 
     printf("hello?\n");
 
@@ -18,7 +19,7 @@ int main(int argc, char *argv[]) {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_addr.sin_port = htons(7201);
+    server_addr.sin_port = htons(7202);
 
     if (bind(socket_desc, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         printf("bind error\n");
@@ -41,9 +42,13 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        while ((read_size = recv(client_socket, buffer, 400, 0)) > 0) {
+        while ((read_size = recv(client_socket, buffer, 6000, 0)) > 0) {
             printf(buffer);
+            char* split_buffer = strtok(buffer, "\n");
+            write(client_socket, split_buffer[0], strlen(split_buffer[0]));
         }
+
+
 
         close(client_socket);
     }
