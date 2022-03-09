@@ -14,14 +14,14 @@ static size_t readline() {
 
     // reads until it reads an EOF, a newline, or buffer is full
     char* result = fgets(line, sizeof(line), stdin);
-    if(result == NULL)
+    if (result == NULL)
         exit(EXIT_FAILURE);
 
     // how long was the line we read?
     size_t len = strlen(line);
 
     // did we actually read a line? Only if line ends in \n
-    if(line[len-1] != '\n')
+    if (line[len-1] != '\n')
         exit(EXIT_FAILURE);
 
     line[len-1]='\0'; //ignore the newline itself by moving null-terminator
@@ -37,18 +37,19 @@ bool handle_menu_option(char c) {
             readline();
             time_t target_time = parse_time(line);
             if (target_time == TIME_FAILED) {
-                printf("Time is incorrectly formated!\n");
+                printf("Time is incorrectly formatted!\n");
                 break;
             }
-            printf("Select the sound for your alarm (1-3, default 1): ");
+            printf("Select the sound for your alarm (1-%d, default 1): ", SOUND_COUNT);
             int input_len = readline();
             int sound_number;
             if (input_len == 0) sound_number = 1;
-            else sound_number = line[0] - '0';
-            if (sound_number > 3 || sound_number < 1) {
-                printf("Not a valid input for sound!\n");
+            else if(input_len == 1) sound_number = line[0]-'0';
+            else {
+                printf("Not a valid number entry!\n");
                 break;
             }
+
             add_alarm(target_time, sound_number);
             break;
 
@@ -63,12 +64,11 @@ bool handle_menu_option(char c) {
             if(sscanf(line, "%d%c", &alarm_number, &dummy_char) == 1)
                 cancel_alarm(alarm_number);
             else
-                printf("Please enter a number");
+                printf("Not a valid number entry!\n");
             break;
 
         case 'x':
             printf("Goodbye!\n");
-            cancel_all_alarms();
             exit(EXIT_SUCCESS);
 
         default:
@@ -80,6 +80,8 @@ bool handle_menu_option(char c) {
 int main() {
     printf("Welcome to the alarm clock! It is currently %s\n", now_as_string());
     printf("Please enter \"s\" (schedule), \"l\" (list), \"c\" (cancel), \"x\" (exit)\n");
+
+    atexit(cancel_all_alarms);
 
     while(1) {
         printf("> ");

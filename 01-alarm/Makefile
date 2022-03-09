@@ -5,9 +5,9 @@ OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
 
 .PHONY: all clean
 
-all: build/alarmclock
+all: alarmclock
 
-build/alarmclock: $(OFILES)
+alarmclock: $(OFILES)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 build/%.o: src/%.c build
@@ -17,4 +17,4 @@ build:
 	mkdir build
 
 clean:
-	rm -rf build
+	rm -rf build alarmclock
