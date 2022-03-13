@@ -8,7 +8,7 @@ OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
 all: build/server
 
 build/server: $(OFILES)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@ -g -Wall
 
 build/%.o: src/%.c build
 	$(CC) $(CFLAGS) -c $< -o $@
