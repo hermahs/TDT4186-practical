@@ -5,5 +5,4 @@ char* get_path(char* string);
 
 char* get_file_from_path(char* path);
 
-#endif
-
+#endif //__UTIL_H_

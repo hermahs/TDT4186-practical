@@ -1,4 +1,4 @@
-CFLAGS+=-g -Iinclude
+CFLAGS+=-g -Iinclude -pthread
 
 CFILES:=$(wildcard src/*.c)
 OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
