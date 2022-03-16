@@ -3,13 +3,17 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#include <unistd.h>
 #include <stdbool.h>
 #include "util.h"
+#include "not_found.h"
 
-#define error(...) do { 			\
-	frpintf(stderr, __VA_ARGS__); 	\
-	exit(EXIT_FAILURE);				\
+#define error(...) do { 		\
+	fprintf(stderr, __VA_ARGS__); 	\
+	exit(EXIT_FAILURE);		\
 } while (false)
+
+#define CRLF "\r\n"
 
 /** Takes in a string where the first line looks like "GET /path HTTP/1.1"
   * and copies out the path part. Result needs to be free()d
@@ -23,10 +27,13 @@ char* get_path(char* string) {
     return r;
 }
 
-char* get_file_from_path(char* patih) {
+/** Takes in a path for requested file and serves it if found.
+ *  If not found it will error (will send a 404 page later)
+ */
+char* get_file_from_path(char* path) {
 	// TODO: add security so you can't go past base directory
 	if (!check_if_path_exist(path))
-		error("file does not exist\n"); // send 404 here later
+		return not_found;
 
 	char* buffer = 0;
 	long length;
@@ -55,3 +62,30 @@ bool check_if_path_exist(char* path) {
 	
 	return true;
 }
+
+int create_send_data_to_client() {
+	char* path = get_path(recv_buffer);
+	char* file_content;
+
+	if (!strcmp(path, "/favicon.ico")) {
+		file_content = "";
+	} else {
+		char file_buffer[strlen(settings.origin_path) + strlen(path) + 1];
+		snprintf(file_buffer, sizeof(file_buffer), "%s%s", settings.origin_path, path);
+		file_content = get_file_from_path(file_buffer);
+	}
+
+	int send = snprintf(send_buffer, sizeof(send_buffer),
+					"HTTP/1.0 200 OK"CRLF
+					"Content-Length: %ld"CRLF
+					"Content-Type: text/html; charset=utf-8"CRLF
+					CRLF
+					"%s",
+					strlen(file_content), file_content);
+
+	free(path);
+
+	return send;
+
+
+}	

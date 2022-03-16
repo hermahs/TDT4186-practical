@@ -19,6 +19,8 @@
 #define CRLF "\r\n"
 
 thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
+settings_s settings;
+
 
 int main(int argc, char *argv[]) {
 
@@ -27,15 +29,14 @@ int main(int argc, char *argv[]) {
     if (argc != 5)
         error("not the correct amount of args\n");
     
-    char* origin_path = argv[1];
-
-    if(!check_if_path_exist(origin_path))
+	settings.origin_path = argv[1];
+    
+	if(!check_if_path_exist(settings.origin_path))
         error("path does not exist\n");
 
-    int port = strtol(argv[2], NULL, 10);
-    int threads = strtol(argv[3], NULL, 10);
-    int bufferslots = strtol(argv[4], NULL, 10);
-
+	settings.port = strtol(argv[2], NULL, 10);
+	settings.num_threads = strtol(argv[3], NULL, 10);
+	settings.buffer_slots = strtol(argv[4], NULL, 10);
 
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < -1)
         error("could not create socket\n");
@@ -48,7 +49,7 @@ int main(int argc, char *argv[]) {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(ADDR);
-    server_addr.sin_port = htons(port);
+    server_addr.sin_port = htons(settings.port);
     
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
         error("bind error\n");
@@ -64,26 +65,15 @@ int main(int argc, char *argv[]) {
             error("nani?! accept failed!!\n");
 
         while ((read_size = recv(client_socket, recv_buffer, 6000, 0)) > 0) {
-            char* file_buffer[strlen(origin_path) + strlen(path)];
-			char* path = get_path(recv_buffer);	
-			snprintf(file_buffer, sizeof(file_buffer), "%s%s", origin_path, path);
-			char* file_content = get_file_from_path(file_buffer);
-
-            int send = snprintf(send_buffer, sizeof(send_buffer),
-                                "HTTP/1.0 200 OK"CRLF
-                                "Content-Length: %ld"CRLF
-                                "Content-Type: text/html; charset=utf-8"CRLF
-                                CRLF
-                                "%s",
-                                strlen(file_content), file_content);
-
+        	
+			int send = create_send_data_to_client();
+			
             if (send >= sizeof(send_buffer))
                 fprintf(stderr, "Send buffer not large enough for response! Truncated!\n");
 
             if (write(client_socket, send_buffer, send) < 0)
                 fprintf(stderr, "send error");
 
-            free(path);
             close(client_socket);
         }
     }
