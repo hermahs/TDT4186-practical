@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
 
     int server_socket, client_socket, read_size;
 
-    if ((server_socket = socket(AF_INET | AF_INET6, SOCK_STREAM, 0)) < -1)
+    if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < -1)
         error("could not create socket\n");
 
     // Allow other processes to bind to the socket, to allow quick restarts
@@ -50,9 +50,8 @@ int main(int argc, char *argv[]) {
         while ((read_size = recv(client_socket, recv_buffer, 6000, 0)) > 0) {
             char* path = get_path(recv_buffer);
 
-
             int send = snprintf(send_buffer, sizeof(send_buffer),
-                                "HTTP/1.0 200 OK"CRLF CRLF
+                                "HTTP/1.0 200 OK"CRLF
                                 "Content-Length: %d"CRLF
                                 "Content-Type: text/html; charset=utf-8"CRLF
                                 CRLF
