@@ -52,15 +52,18 @@ int main(int argc, char *argv[]) {
             error("nani?! accept failed!!\n");
 
         while ((read_size = recv(client_socket, recv_buffer, 6000, 0)) > 0) {
-            char* path = get_path(recv_buffer);
+            char* file_buffer[strlen(origin_path) + strlen(path)];
+			char* path = get_path(recv_buffer);	
+			snprintf(file_buffer, sizeof(file_buffer), "%s%s", origin_path, path);
+			char* file_content = get_file_from_path(file_buffer);
 
             int send = snprintf(send_buffer, sizeof(send_buffer),
                                 "HTTP/1.0 200 OK"CRLF
-                                "Content-Length: %d"CRLF
+                                "Content-Length: %ld"CRLF
                                 "Content-Type: text/html; charset=utf-8"CRLF
                                 CRLF
                                 "%s",
-                                strlen(path), path);
+                                strlen(file_content), file_content);
 
             if (send >= sizeof(send_buffer))
                 fprintf(stderr, "Send buffer not large enough for response! Truncated!\n");
