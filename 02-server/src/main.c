@@ -10,7 +10,6 @@
 
 #define BUFFER_SIZE (1024*1024)
 #define ADDR "127.0.0.1"
-#define PORT 7200
 
 #define error(...) do {              \
     fprintf (stderr, __VA_ARGS__);   \
@@ -25,6 +24,19 @@ int main(int argc, char *argv[]) {
 
     int server_socket, client_socket, read_size;
 
+    if (argc != 5)
+        error("not the correct amount of args\n");
+    
+    char* origin_path = argv[1];
+
+    if(!check_if_path_exist(origin_path))
+        error("path does not exist\n");
+
+    int port = strtol(argv[2], NULL, 10);
+    int threads = strtol(argv[3], NULL, 10);
+    int bufferslots = strtol(argv[4], NULL, 10);
+
+
     if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < -1)
         error("could not create socket\n");
 
@@ -36,8 +48,8 @@ int main(int argc, char *argv[]) {
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(ADDR);
-    server_addr.sin_port = htons(PORT);
-
+    server_addr.sin_port = htons(port);
+    
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
         error("bind error\n");
 
