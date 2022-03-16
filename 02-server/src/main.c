@@ -8,6 +8,10 @@
 #include <threads.h>
 #include "util.h"
 
+#define BUFFER_SIZE (1024*1024)
+#define ADDR "127.0.0.1"
+#define PORT 7200
+
 #define error(...) do {              \
     fprintf (stderr, __VA_ARGS__);   \
     exit(EXIT_FAILURE);              \
@@ -15,7 +19,7 @@
 
 #define CRLF "\r\n"
 
-thread_local char recv_buffer[6000], send_buffer[6000];
+thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
 
 int main(int argc, char *argv[]) {
 
@@ -31,8 +35,8 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in server_addr, client_addr;
 
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server_addr.sin_port = htons(7200);
+    server_addr.sin_addr.s_addr = inet_addr(ADDR);
+    server_addr.sin_port = htons(PORT);
 
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
         error("bind error\n");
