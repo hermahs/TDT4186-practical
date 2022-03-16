@@ -28,6 +28,10 @@ int main(int argc, char *argv[]) {
         error("not the correct amount of args\n");
     
     char* origin_path = argv[1];
+
+    if(!check_if_path_exist(origin_path))
+        error("path does not exist\n");
+
     int port = strtol(argv[2], NULL, 10);
     int threads = strtol(argv[3], NULL, 10);
     int bufferslots = strtol(argv[4], NULL, 10);
