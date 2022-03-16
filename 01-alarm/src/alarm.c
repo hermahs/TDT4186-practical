@@ -37,7 +37,8 @@ static pid_t spawn_alarm(int alarm_index, time_t sleep_time) {
     if (pid == 0) { // child process
         sleep(sleep_time);
         printf("RING RING!\n");
-        fflush(stdout);
+        freopen("/dev/null", "w", stdout);
+        freopen("/dev/null", "w", stderr);
         play_sound(alarms[alarm_index].sound_number);
         _exit(EXIT_FAILURE); // In case execvp fails. Does /not/ call atexit callbacks
     }
