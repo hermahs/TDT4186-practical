@@ -7,5 +7,4 @@ char* get_file_from_path(char* path);
 
 bool check_if_path_exist(char* path);
 
-#endif
-
+#endif //__UTIL_H_

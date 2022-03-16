@@ -6,17 +6,15 @@
 #include <stdbool.h>
 #include "util.h"
 
+/** Takes in a string where the first line looks like "GET /path HTTP/1.1"
+  * and copies out the path part. Result needs to be free()d
+  */
 char* get_path(char* string) {
     char* context = NULL;
-    char* string_copy = malloc(sizeof(char) * strlen(string) + 1);
-    // invalid write
-    strcpy(string_copy, string);
-    char* get_segment = strtok_r(string_copy, "\n", &context);
-    char* path = strtok_r(get_segment, " ", &context);
-    path = strtok_r(NULL, " ", &context);
-    char* r = malloc(sizeof(char) * strlen(path) + 1);
-    strcpy(r, path);
-    free(string_copy);
+    char* firstline = strtok_r(string, "\n", &context);
+    strtok_r(firstline, " ", &context);
+    char *path = strtok_r(NULL, " ", &context);
+    char* r = strdup(path);
     return r;
 }
 
