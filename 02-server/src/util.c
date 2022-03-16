@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <dirent.h>
+#include <errno.h>
+#include <stdbool.h>
 #include "util.h"
 
 /** Takes in a string where the first line looks like "GET /path HTTP/1.1"
@@ -21,4 +24,14 @@ char* get_file_from_path(char* path) {
 	// See if file exists in folder
 
 
+}
+
+bool check_if_path_exist(char* path) {
+	DIR* dir = opendir(path);
+
+	if(ENOENT == errno) return false;
+
+	closedir(dir);
+	
+	return true;
 }
