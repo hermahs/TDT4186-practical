@@ -27,10 +27,9 @@ int main(int argc, char *argv[]) {
     int server_socket, client_socket, read_size;
 
     if (argc != 5)
-        error("not the correct amount of args\n");
+        error("Usage: %s <www-path> <port> <#threads> <#bufferslots>\n",argv[0]);
     
 	settings.origin_path = argv[1];
-    
 	if(!check_if_path_exist(settings.origin_path))
         error("path does not exist\n");
 
