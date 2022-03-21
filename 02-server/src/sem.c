@@ -17,20 +17,20 @@ SEM *sem_init(int initVal) {
 }
 
 int sem_del(SEM *sem) {
-	pthread_mutex_destroy(&sem->mutex);
-	pthread_cond_destroy(&sem->cond);
-	free(&sem);
+	pthread_mutex_destroy(sem->mutex);
+	pthread_cond_destroy(sem->cond);
+	free(sem);
 	return 0;
 }
 
 void P(SEM *sem) {
-	pthread_mutex_lock(&sem->mutex);
-	while(sem->val < 1) { pthread_cond_wait(&sem->cond, &sem->mutex); }
+	pthread_mutex_lock(sem->mutex);
+	while(sem->val < 1) { pthread_cond_wait(sem->cond, sem->mutex); }
 	sem->val--;
 }
 
 void V(SEM *sem) {
-	&sem->val++;
-	pthread_mutex_unlock(&sem->mutex);
-	pthread_cond_brodcast(&sem->cond);
+	sem->val++;
+	pthread_mutex_unlock(sem->mutex);
+	pthread_cond_brodcast(sem->cond);
 }
