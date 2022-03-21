@@ -64,6 +64,9 @@ int main(int argc, char *argv[]) {
         if (client_socket < 0)
             error("nani?! accept failed!!\n");
 
+		// handle new connection
+		// should we have recv_buffer as a bbuffer???
+
         while ((read_size = recv(client_socket, recv_buffer, 6000, 0)) > 0) {
         	
 			int send = create_send_data_to_client();

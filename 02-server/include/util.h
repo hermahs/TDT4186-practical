@@ -19,4 +19,6 @@ bool check_if_path_exist(char* path);
 
 int create_send_data_to_client();
 
+void* send_data_to_client();
+
 #endif //__UTIL_H_

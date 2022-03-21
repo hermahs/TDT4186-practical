@@ -86,6 +86,8 @@ int create_send_data_to_client() {
 	free(path);
 
 	return send;
-
-
 }	
+
+void* send_data_to_client() {
+
+}
