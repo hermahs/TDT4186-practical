@@ -2,13 +2,14 @@
 #include "bbuffer.h"
 #include "sem.h"
 
-typedef struct BNDBUF {
+struct BNDBUF {
 	int* buffer;
-	int head;
-	int tail;
-	unsigned int max;
-	unsigned int full;
-	unsigned int empty;
+	unsigned int size;
+	size_t head;
+	size_t tail;
+
+	SEM* item_count;
+	SEM* free_count;
 };
 
 BNDBUF *bb_init(unsigned int size) {
