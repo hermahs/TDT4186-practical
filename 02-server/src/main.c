@@ -1,3 +1,4 @@
+#include "main.h"
 #include <stdio.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -6,39 +7,32 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <threads.h>
-#include "util.h"
+#include <errno.h>
+#include <error.h>
+#include "http.h"
+#include "files.h"
 
-#define BUFFER_SIZE (1024*1024)
 #define ADDR "127.0.0.1"
 
-#define error(...) do {              \
-    fprintf (stderr, __VA_ARGS__);   \
-    exit(EXIT_FAILURE);              \
-} while(false)
-
-#define CRLF "\r\n"
-
-thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
 settings_s settings;
-
 
 int main(int argc, char *argv[]) {
 
     int server_socket, client_socket, read_size;
 
     if (argc != 5)
-        error("Usage: %s <www-path> <port> <#threads> <#bufferslots>\n",argv[0]);
+        error(-1, 0, "Usage: %s <www-path> <port> <#threads> <#bufferslots>", argv[0]);
     
 	settings.origin_path = argv[1];
-	if(!check_if_path_exist(settings.origin_path))
-        error("path does not exist\n");
+	if(!check_if_path_readable(settings.origin_path))
+        error(-1, 0, "www-path '%s' does not exist", argv[1]);
 
 	settings.port = strtol(argv[2], NULL, 10);
 	settings.num_threads = strtol(argv[3], NULL, 10);
 	settings.buffer_slots = strtol(argv[4], NULL, 10);
 
     if ((server_socket = socket(AF_INET6, SOCK_STREAM, 0)) < 0)
-        error("could not create socket\n");
+        error(-1, errno, "could not create socket");
 
     // Allow other processes to bind to the socket, to allow quick restarts
     int optval = 1;
@@ -50,35 +44,27 @@ int main(int argc, char *argv[]) {
     server_addr.sin6_port = htons(settings.port);
 
     if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-        error("bind error\n");
+        error(-1, errno, "bind error");
 
     if (listen(server_socket, 5) < 0)
-        error("listen error");
+        error(-1, errno, "listen error");
 
     while (1) {
         int client_addr_len = sizeof(struct sockaddr_in);
         client_socket = accept(server_socket, (struct sockaddr *)&client_addr, (socklen_t*)&client_addr_len);
 
         if (client_socket < 0)
-            error("nani?! accept failed!!\n");
+            error(0, errno, "accept failed");
 
-		// handle new connection
-		// should we have recv_buffer as a bbuffer???
-
-        while ((read_size = recv(client_socket, recv_buffer, 6000, 0)) > 0) {
-        	
-			int send = create_send_data_to_client();
-			
-            if (send >= sizeof(send_buffer))
-                fprintf(stderr, "Send buffer not large enough for response! Truncated!\n");
-
+        if (recv(client_socket, recv_buffer, sizeof(recv_buffer), 0) < 0) {
+            error(0, errno, "recv error");
+        } else {
+            int send = handle_get_request();
             if (write(client_socket, send_buffer, send) < 0)
-                fprintf(stderr, "send error");
-
-            close(client_socket);
+                error(0, errno, "send error");
         }
+        close(client_socket);
     }
-
     close(server_socket);
 
     return EXIT_SUCCESS;
