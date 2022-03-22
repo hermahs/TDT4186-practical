@@ -1,13 +1,14 @@
+#include <stdlib.h>
 #include "bbuffer.h"
 #include "sem.h"
 
 typedef struct BNDBUF {
 	int* buffer;
-	size_t head;
-	size_t tail;
+	int head;
+	int tail;
 	unsigned int max;
-	bool full;
-	bool empty;
+	unsigned int full;
+	unsigned int empty;
 };
 
 BNDBUF *bb_init(unsigned int size) {
@@ -31,18 +32,29 @@ void bb_del(BNDBUF *bb) {
 }
 
 int bb_get(BNDBUF *bb) {
+	int r;	
 	// if empty, wait till something has been added to get it
 	if (!bb->empty) {
-		
+		r = bb->buffer[bb->tail];
+		if ( (bb->tail + 1) == bb->head) bb->empty = 1;
+		if ( (bb->tail + 1) == bb->max && (bb->tail + 1) != bb->head) bb->tail = 0;
+		else bb->tail++;
+	} else {
+	
 	}
+
+	return r;
 }
 
 void bb_add(BNDBUF *bb, int fd) {
 	// if full, wait till something has been removed before adding it
 	if (!bb->full) {
 		bb->buffer[bb->head] = fd;
-		bb->head++;
-		if ((bb->head + bb->tail) == bb->max) bb->full = 1;	
+		if ( (bb->head + 1) == bb->tail) bb->full = 1;
+		if ( (bb->head + 1) == bb->max && (bb->head + 1) != bb->tail) bb->head = 0;
+		else bb->head++;
+	} else {
+	
 	}
 }
 
