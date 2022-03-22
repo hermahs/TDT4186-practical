@@ -26,6 +26,12 @@ void* handle_thread(void* arg) {
     while(1) {
         int client_socket = bb_get(queue); // Gives us the file descriptor of a new client
 
+        // Set timeout on recv operations, to avoid blocking forever
+        struct timeval tv;
+        tv.tv_sec = 1; // 1 second
+        tv.tv_usec = 0;
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+
         int recieved = 0;
         bool newline_seen = false;
         while(!newline_seen && recieved < sizeof(recv_buffer)) {

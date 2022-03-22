@@ -51,7 +51,7 @@ int bb_get(BNDBUF *bb) {
 	pthread_mutex_lock(&bb->mutex);
 
 	int r = bb->buffer[bb->head];
-	bb->head = (bb->head+1) / bb->size;
+	bb->head = (bb->head+1) % bb->size;
 
 	pthread_mutex_unlock(&bb->mutex);
 	V(bb->free_count); // increase, after the slot is actually read from, to prevent overriding
@@ -65,7 +65,7 @@ void bb_add(BNDBUF *bb, int fd) {
 	pthread_mutex_lock(&bb->mutex);
 
 	bb->buffer[bb->tail] = fd;
-	bb->tail = (bb->tail+1) / bb->size;
+	bb->tail = (bb->tail+1) % bb->size;
 
 	pthread_mutex_unlock(&bb->mutex);
 	V(bb->item_count); // Increase item count /after/ we have stored the value
