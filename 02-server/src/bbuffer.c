@@ -1,61 +1,73 @@
-#include <stdlib.h>
 #include "bbuffer.h"
+#include <stdlib.h>
+#include <error.h>
+#include <errno.h>
+#include <pthread.h>
 #include "sem.h"
 
 struct BNDBUF {
 	int* buffer;
-	unsigned int size;
+	size_t size;
 	size_t head;
 	size_t tail;
 
 	SEM* item_count;
 	SEM* free_count;
+	pthread_mutex_t mutex;
 };
 
 BNDBUF *bb_init(unsigned int size) {
-	BNDBUF *r = malloc(sizeof(struct BNDBUF));
-	// add errorchecking here
-	r->max = size;
-	r->buffer = malloc(sizeof(int) * r->max);
-	// add errochecking here
+	BNDBUF *r = malloc(sizeof(BNDBUF));
+	if(r == NULL)
+		error_at_line(-1, errno, __FILE__, __LINE__, "out of memory");
+
+	r->size = size;
+	r->buffer = malloc(sizeof(int) * size);
+	if(r->buffer == NULL)
+		error_at_line(-1, errno, __FILE__, __LINE__, "out memory of");
+
 	r->head = 0;
 	r->tail = 0;
-	r->full = 0;
-	r->empty = 1;
+
+	r->item_count = sem_init(0);
+	r->free_count = sem_init(size);
+	pthread_mutex_init(&r->mutex, NULL);
 
 	return r;
 }
 
 void bb_del(BNDBUF *bb) {
+	sem_del(bb->item_count);
+	sem_del(bb->free_count);
+	pthread_mutex_destroy(&bb->mutex);
 	free(bb->buffer);
 	free(bb);
 	return;
 }
 
 int bb_get(BNDBUF *bb) {
-	int r;	
-	// if empty, wait till something has been added to get it
-	if (!bb->empty) {
-		r = bb->buffer[bb->tail];
-		if ( (bb->tail + 1) == bb->head) bb->empty = 1;
-		if ( (bb->tail + 1) == bb->max && (bb->tail + 1) != bb->head) bb->tail = 0;
-		else bb->tail++;
-	} else {
-	
-	}
+
+	P(bb->item_count); // decrease (or block if 0), reserving at least one item for us
+	pthread_mutex_lock(&bb->mutex);
+
+	int r = bb->buffer[bb->head];
+	bb->head = (bb->head+1) / bb->size;
+
+	pthread_mutex_unlock(&bb->mutex);
+	V(bb->free_count); // increase, after the slot is actually read from, to prevent overriding
 
 	return r;
 }
 
 void bb_add(BNDBUF *bb, int fd) {
-	// if full, wait till something has been removed before adding it
-	if (!bb->full) {
-		bb->buffer[bb->head] = fd;
-		if ( (bb->head + 1) == bb->tail) bb->full = 1;
-		if ( (bb->head + 1) == bb->max && (bb->head + 1) != bb->tail) bb->head = 0;
-		else bb->head++;
-	} else {
-	
-	}
+
+	P(bb->free_count); // decrease free count now, reserving at least one free slot for us
+	pthread_mutex_lock(&bb->mutex);
+
+	bb->buffer[bb->tail] = fd;
+	bb->tail = (bb->tail+1) / bb->size;
+
+	pthread_mutex_unlock(&bb->mutex);
+	V(bb->item_count); // Increase item count /after/ we have stored the value
 }
 

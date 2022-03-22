@@ -1,0 +1,13 @@
+body, html, div {
+    margin: 0;
+    padding: 0;
+}
+.centered {
+    text-align: center;
+    margin: auto;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}

@@ -9,10 +9,9 @@
 
 #define min(a, b) ((a)<(b)?(a):(b))
 
-thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
-
 const char* HTML_CONTENT_TYPE = "text/html; charset=utf-8";
 const char* JPEG_CONTENT_TYPE = "image/jpeg";
+const char* CSS_CONTENT_TYPE = "text/css";
 
 int handle_get_request() {
     char* path = get_path(recv_buffer); // We don't own the path memory
@@ -25,6 +24,8 @@ int handle_get_request() {
     const char* content_type = HTML_CONTENT_TYPE;
     if (has_extension(path, ".jpg") || has_extension(path, ".jpeg"))
         content_type = JPEG_CONTENT_TYPE;
+    else if(has_extension(path, ".css"))
+        content_type = CSS_CONTENT_TYPE;
 
     int send;
     if (file_len >= 0) {
@@ -32,6 +33,7 @@ int handle_get_request() {
                         "HTTP/1.0 200 OK"CRLF
                         "Content-Length: %ld"CRLF
                         "Content-Type: %s"CRLF
+                        "Connection: close"CRLF
                         CRLF,
                         file_len, content_type);
     } else {
@@ -48,6 +50,7 @@ int handle_get_request() {
                         "HTTP/1.0 404 Not Found"CRLF
                         "Content-Length: %ld"CRLF
                         "Content-Type: %s"CRLF
+                        "Connection: close"CRLF
                         CRLF,
                         file_len, HTML_CONTENT_TYPE);
     }
@@ -57,7 +60,8 @@ int handle_get_request() {
         return min(send, sizeof(send_buffer)-1);
     }
 
-    printf("file len: %d", file_len);
+    printf("Thread %d served file %s\n", thread_number, path);
+
     memcpy(send_buffer+send, file_content, file_len);
     free(file_content);
 

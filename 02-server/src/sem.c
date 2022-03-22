@@ -29,7 +29,7 @@ void P(SEM *sem) {
 	pthread_mutex_lock(&sem->mutex);
 	while(sem->val <= 0) { pthread_cond_wait(&sem->cond, &sem->mutex); }
 	sem->val--;
-	pthread_mutex_lock(&sem->mutex);
+	pthread_mutex_unlock(&sem->mutex);
 }
 
 // Increments, and informs at least one thread waiting for the condition variable
