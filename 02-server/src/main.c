@@ -15,8 +15,8 @@
 
 #define ADDR "127.0.0.1"
 
-thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
-thread_local int thread_number;
+_Thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
+_Thread_local int thread_number;
 settings_s settings;
 BNDBUF* queue;
 
