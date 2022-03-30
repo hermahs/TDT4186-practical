@@ -5,12 +5,12 @@ OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
 
 .PHONY: all clean
 
-all: build/server
+all: build build/server
 
 build/server: $(OFILES)
 	$(CC) $(LDFLAGS) $^ -o $@ -g -Wall
 
-build/%.o: src/%.c build
+build/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 build:

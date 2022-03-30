@@ -15,8 +15,8 @@
 
 #define ADDR "127.0.0.1"
 
-thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
-thread_local int thread_number;
+_Thread_local char recv_buffer[BUFFER_SIZE], send_buffer[BUFFER_SIZE];
+_Thread_local int thread_number;
 settings_s settings;
 BNDBUF* queue;
 
@@ -25,6 +25,12 @@ void* handle_thread(void* arg) {
 
     while(1) {
         int client_socket = bb_get(queue); // Gives us the file descriptor of a new client
+
+        // Set timeout on recv operations, to avoid blocking forever
+        struct timeval tv;
+        tv.tv_sec = 1; // 1 second
+        tv.tv_usec = 0;
+        setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
         int recieved = 0;
         bool newline_seen = false;
