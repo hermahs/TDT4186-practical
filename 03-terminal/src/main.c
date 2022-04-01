@@ -26,6 +26,8 @@ static size_t readline() {
 }
 
 int main(int argc, char* argv) {
+
+	// Get current working directory
 	getcwd(cwd, sizeof(cwd));
 
 	while (1)
