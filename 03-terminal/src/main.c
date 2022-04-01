@@ -33,7 +33,8 @@ int main(int argc, char* argv) {
 	while (1)
 	{
 		printf("%s: ", cwd);
-		readline();
+		// Leser inn bruker input, altså command med args
+		readline(); 
 		printf("%s \n", line);
 	}
 	
