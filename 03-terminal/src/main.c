@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
-#include "main.h"
-#include "stdlib.h"
 #include <unistd.h>
-
+#include <stdlib.h>
+#include "main.h"
+#include "control.h"
 
 static char cwd[256];
 static char line[256];
@@ -26,6 +26,10 @@ static size_t readline() {
 }
 
 int main(int argc, char* argv) {
+
+	char* yeet = handle_command("yeet", "yeet"); 
+	
+	printf("%s:%ld", yeet, sizeof(yeet));
 
 	while (1)
 	{
