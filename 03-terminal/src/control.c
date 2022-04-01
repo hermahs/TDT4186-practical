@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "control.h"
 
@@ -9,7 +10,7 @@
 char* handle_command(char* command, char* args) {
 	pid_t pid;
 	char output[MAX_SIZE];
-
+	int link[2];
 	if (pipe(link) == -1) err("pipe");
 
 	if ((pid = fork()) == -1) err("fork");
@@ -23,8 +24,9 @@ char* handle_command(char* command, char* args) {
 	} else {
 		close(link[1]);
 		int nbytes = read(link[0], output, sizeof(output));
-		printf("Output: %s\n", output);
-		return output;
+		char* o = malloc(sizeof(char)*nbytes);
+		strcpy(o, output);
+		return o;
 	}
 
 	
