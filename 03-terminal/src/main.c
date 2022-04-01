@@ -2,7 +2,10 @@
 #include <string.h>
 #include "main.h"
 #include "stdlib.h"
+#include <unistd.h>
 
+
+static char cwd[256];
 static char line[256];
 static size_t readline() {
 
@@ -23,10 +26,11 @@ static size_t readline() {
 }
 
 int main(int argc, char* argv) {
-	char command[50];
+	getcwd(cwd, sizeof(cwd));
+
 	while (1)
 	{
-		printf("Something something path: ");
+		printf("%s: ", cwd);
 		readline();
 		printf("%s \n", line);
 	}
