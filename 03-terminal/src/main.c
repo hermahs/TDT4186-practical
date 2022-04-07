@@ -47,9 +47,9 @@ static int getargs() {
 
 int main(int argc, char* argv) {
 	// Get current working directory
-	char* t[] = {"cd", "..", NULL};
-	char* yeet = handle_command(t);
-	printf("%s\n", yeet);
+	// char* t[] = {"cd", "..", NULL};
+	// char* yeet = handle_command(t);
+	// printf("%s\n", yeet);
 	getcwd(cwd, sizeof(cwd));
 
 	while (1)
@@ -60,7 +60,8 @@ int main(int argc, char* argv) {
 		// Leser inn bruker input, altså command med args
 		readline();
 		getargs();
-		printf("%s \n", line);
+		char* output = handle_command(ch_arr);
+		printf("%s\n", output);
 	}
 	
 	return 0;
