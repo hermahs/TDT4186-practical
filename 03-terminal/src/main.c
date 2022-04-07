@@ -7,6 +7,7 @@
 
 static char cwd[256];
 static char line[256];
+static char* ch_arr[256];
 static size_t readline() {
 
     // reads until it reads an EOF, a newline, or buffer is full
@@ -25,6 +26,29 @@ static size_t readline() {
     return len-1;
 }
 
+static size_t getargs() {
+
+	char* linecpy;
+    linecpy = (char*)malloc(sizeof(line));
+    strcpy(linecpy, line);
+	char* token = strtok(linecpy, " ");
+	int counter = 0;
+
+	// Add each arg from input to array
+	while (token != NULL)
+	{
+		ch_arr[counter] = token;
+		counter ++;
+		token = strtok(NULL, " ");
+	}
+	ch_arr[counter] = NULL;
+	
+	// TODO: thus far return only 0
+	size_t len = 0;
+
+	return len;
+}
+
 int main(int argc, char* argv) {
 	// Get current working directory
 	getcwd(cwd, sizeof(cwd));
@@ -35,7 +59,8 @@ int main(int argc, char* argv) {
 		getcwd(cwd, sizeof(cwd));
 		printf("%s: ", cwd);
 		// Leser inn bruker input, altså command med args
-		readline(); 
+		readline();
+		getargs();
 		printf("%s \n", line);
 	}
 	
