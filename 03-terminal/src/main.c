@@ -26,14 +26,13 @@ static size_t readline() {
 }
 
 int main(int argc, char* argv) {
-
-	char* yeet = handle_command("yeet", "yeet"); 
-	printf("%s\n", yeet);
 	// Get current working directory
 	getcwd(cwd, sizeof(cwd));
 
 	while (1)
 	{
+		// Get current working directory
+		getcwd(cwd, sizeof(cwd));
 		printf("%s: ", cwd);
 		// Leser inn bruker input, altså command med args
 		readline(); 
