@@ -2,7 +2,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "main.h"
 #include "control.h"
 
 static char cwd[256];
@@ -27,6 +26,9 @@ static size_t readline() {
 
 int main(int argc, char* argv) {
 	// Get current working directory
+	char* t[] = {"cd", "..", NULL};
+	char* yeet = handle_command(t);
+	printf("%s\n", yeet);
 	getcwd(cwd, sizeof(cwd));
 
 	while (1)
@@ -35,7 +37,9 @@ int main(int argc, char* argv) {
 		getcwd(cwd, sizeof(cwd));
 		printf("%s: ", cwd);
 		// Leser inn bruker input, altså command med args
-		readline(); 
+		readline();
+		// gjør noe med line
+
 		printf("%s \n", line);
 	}
 	
