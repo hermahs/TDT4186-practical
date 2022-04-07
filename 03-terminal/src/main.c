@@ -26,7 +26,7 @@ static size_t readline() {
     return len-1;
 }
 
-static size_t getargs() {
+static int getargs() {
 
 	char* linecpy;
     linecpy = (char*)malloc(sizeof(line));
@@ -42,11 +42,8 @@ static size_t getargs() {
 		token = strtok(NULL, " ");
 	}
 	ch_arr[counter] = NULL;
-	
-	// TODO: thus far return only 0
-	size_t len = 0;
 
-	return len;
+	return counter;
 }
 
 int main(int argc, char* argv) {
