@@ -28,8 +28,7 @@ static size_t readline() {
 int main(int argc, char* argv) {
 
 	char* yeet = handle_command("yeet", "yeet"); 
-	
-	printf("%s:%ld", yeet, sizeof(yeet));
+	printf("%s\n", yeet);
 	// Get current working directory
 	getcwd(cwd, sizeof(cwd));
 

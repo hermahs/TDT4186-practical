@@ -24,8 +24,7 @@ char* handle_command(char* command, char* args) {
 	} else {
 		close(link[1]);
 		int nbytes = read(link[0], output, sizeof(output));
-		char* o = malloc(sizeof(char)*nbytes);
-		strcpy(o, output);
+		char* o = pretty_copy(output);
 		return o;
 	}
 
@@ -41,4 +40,11 @@ const char* get_file_from_command(char* command) {
 			return c;
 	}
 */
+}
+
+char* pretty_copy(char* input) {
+	while (strstr(input, "\n") != NULL) {
+		input[strcspn(input, "\n")] = ' ';
+	}
+	return input;
 }
