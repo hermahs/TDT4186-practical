@@ -5,9 +5,12 @@
 #include "control.h"
 #include "io.h"
 
+static int to_file = 0;
+static char to_file_path[256];
 static char cwd[256];
 static char line[256];
 static char* ch_arr[256];
+static char fileinput[256];
 static size_t readline() {
 
     // reads until it reads an EOF, a newline, or buffer is full
@@ -64,15 +67,35 @@ int main(int argc, char* argv) {
 		int i = 0;
 		while (ch_arr[i] != NULL) {
 			if (strcmp(ch_arr[i], "<") == 0){
-				printf("%s \n", file_in("test.txt"));
+				if (ch_arr[i + 1] == NULL){
+					printf("Error, no filepath given");
+					break;
+				}
+				strncpy(fileinput, file_in(ch_arr[i + 1]), 256);
+				ch_arr[i] = fileinput;
+				int j = i + 1;
+				while (ch_arr[j] != NULL) {
+					ch_arr[j] = ch_arr[j + 1];
+					j++;
+				}
 			}
 			if (strcmp(ch_arr[i], ">") == 0){
-				file_out("test2.txt", "Ciao bella");
+				if (ch_arr[i + 1] == NULL){
+					printf("Error, no filepath given");
+					break;
+				}
+				to_file = 1; 
+				strncpy(to_file_path, ch_arr[i + 1], 256);
+				ch_arr[i] = ch_arr[i + 2];
+				ch_arr[i + 1] = NULL;
 			}
 			i++;
 		}
 		char* output = handle_command(ch_arr);
 		printf("%s\n", output);
+		if (to_file == 1){
+			file_out(to_file_path, output);
+		}
 		free(output);
 	}
 	

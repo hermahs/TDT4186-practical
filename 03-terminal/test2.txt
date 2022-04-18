@@ -1,1 +1,2 @@
-Ciao bella
+
+Exit status [/bin/ls] = 512

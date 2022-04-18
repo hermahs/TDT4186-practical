@@ -4,17 +4,23 @@
 #include <unistd.h>
 #include "io.h"
 
-static char text[256];
+//static char text[256];
 
 char* file_in(char* filepath) {
-    FILE *file = fopen(filepath, "r");
+    FILE *file = fopen(filepath, "rb");
 
     if (file == NULL) {
         printf("Could not read file \n");
     }
-    fscanf(file, "%s", &text);
-    //printf("What is hello in spanish? \n%s \n", text);
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *text = malloc(fsize + 1);
+    fread(text, fsize, 1, file);
     fclose(file);
+    text[fsize] = 0;
+
     return text;
 }
 
