@@ -51,14 +51,11 @@ static int getargs() {
 }
 
 int main(int argc, char* argv) {
-	// Get current working directory
-	// char* t[] = {"cd", "..", NULL};
-	// char* yeet = handle_command(t);
-	// printf("%s\n", yeet);
 	getcwd(cwd, sizeof(cwd));
 
 	while (1)
 	{
+		to_file = 0;
 		// Get current working directory
 		cleanup_task_list();
 		getcwd(cwd, sizeof(cwd));
@@ -71,13 +68,14 @@ int main(int argc, char* argv) {
 		int i = 0;
 		while (ch_arr[i] != NULL) {
 			if (strcmp(ch_arr[i], "<") == 0) {
-				if (ch_arr[i + 1] == NULL) {
-					printf("Error, no filepath given");
-					break;
-				}
-				strncpy(fileinput, file_in(ch_arr[i + 1]), 256);
-				ch_arr[i] = fileinput;
-				int j = i + 1;
+				// ch_arr[i] = ch_arr[i + 1];
+				// if (ch_arr[i + 1] == NULL) {
+				// 	printf("Error, no filepath given");
+				// 	break;
+				// }
+				// strncpy(fileinput, file_in(ch_arr[i + 1]), 256);
+				// ch_arr[i] = fileinput;
+				int j = i;
 				while (ch_arr[j] != NULL) {
 					ch_arr[j] = ch_arr[j + 1];
 					j++;

@@ -27,6 +27,10 @@ char* file_in(char* filepath) {
     return text;
 }
 
+FILE* file_in_file(char* filepath) {
+    return fopen(filepath, "rb");
+}
+
 int file_out(char* filepath, char* data) {
     FILE *file = fopen(filepath, "w");
     

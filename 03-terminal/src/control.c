@@ -19,9 +19,9 @@ char* add_status_ending(char* command, int status) {
 char* pretty_copy(char* input) {
 	char* r = malloc(sizeof(char) * strlen(input) + 1);
 	strcpy(r, input);
-	while (strstr(r, "\n") != NULL) {
-		r[strcspn(r, "\n")] = ' ';
-	}
+	// while (strstr(r, "\n") != NULL) {
+	// 	r[strcspn(r, "\n")] = ' ';
+	// }
 	return r;
 }
 
