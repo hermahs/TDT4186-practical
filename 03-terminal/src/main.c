@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "control.h"
 #include "io.h"
+#include "tasks.h"
 
 static int to_file = 0;
 static char to_file_path[256];
@@ -60,10 +61,13 @@ int main(int argc, char* argv) {
 	{
 		// Get current working directory
 		getcwd(cwd, sizeof(cwd));
+		cleanup_task_list();
 		printf("%s: ", cwd);
 		// Leser inn bruker input, altså command med args
 		readline();
 		getargs();
+
+		// this can be taken out into its own function (i think)
 		int i = 0;
 		while (ch_arr[i] != NULL) {
 			if (strcmp(ch_arr[i], "<") == 0){
@@ -91,10 +95,15 @@ int main(int argc, char* argv) {
 			}
 			i++;
 		}
+
 		Data output = handle_command(ch_arr);
-		printf("%s\n", output.output);
 		if (to_file == 1){
 			file_out(to_file_path, output.output);
+			printf("%s\n", output.status);
+		} else {
+			if(strcmp(output.output, "\0") != 0) {
+				printf("%s\n%s\n", output.output, output.status);
+			}
 		}
 		free(output.output);
 		free(output.status);

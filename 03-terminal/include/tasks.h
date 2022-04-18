@@ -14,6 +14,6 @@ char* get_task_output(Task task);
 char* get_task_status(Task task);
 void add_to_task_list(Task task);
 void cleanup_task_list();
-Task get_from_task_list(int t);
+void print_task_list();
 
 #endif

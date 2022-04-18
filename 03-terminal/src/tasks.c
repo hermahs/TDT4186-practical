@@ -47,9 +47,9 @@ char* get_task_output(Task task) {
 
 char* get_task_status(Task task) {
     int status;
-    pid_t w;
+    pid_t w = waitpid(task.pid, &status, 0);
 
-    if ((w = waitpid(task.pid, &status, 0)) == -1) err("waitpid get_task_status");
+    if (w == -1) err("waitpid get_task_status");
 
     return add_status_ending(task.argc, status);
 }
@@ -71,15 +71,24 @@ void add_to_task_list(Task task) {
 }
 
 void cleanup_task_list() {
-    // print output from stuff somewhere here
+    pid_t w;
+    int status;
     for (int i = 0; i < MAX_TASKS; i++) {
         if (!tasklist[i].pid)
             continue;
-        if (waitpid(tasklist[i].pid, NULL, WNOHANG) > 0)
+        if ((w = waitpid(tasklist[i].pid, &status, WNOHANG)) > 0) {
+            char* print_status = add_status_ending(tasklist[i].argc, status);
+            printf("%s\n", print_status);
+            free(print_status);
             tasklist[i].pid = 0;
+        }
     }
 }
 
-Task get_from_task_list(int t) {
-    return tasklist[t];
+void print_task_list() {
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (tasklist[i].pid) {
+            printf("%d: %s\n", tasklist[i].pid, tasklist[i].argc);
+        }
+    }
 }

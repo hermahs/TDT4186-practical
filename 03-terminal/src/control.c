@@ -41,8 +41,7 @@ Data handle_command(char* argc[]) {
 		}
 		return ret_data;
 	} else if (strcmp(argc[0], "jobs") == 0) {
-		ret_data.output = "Job stuff incoming";
-		ret_data.status = "";
+		print_task_list();
 		return ret_data;
 	}
 
