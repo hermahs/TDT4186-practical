@@ -31,11 +31,12 @@ static size_t readline() {
 }
 
 static int getargs() {
-
+	char* context = NULL;
 	char* linecpy;
     linecpy = (char*)malloc(sizeof(line));
     strcpy(linecpy, line);
-	char* token = strtok(linecpy, " ");
+	char delim[] = " \t";
+	char* token = strtok_r(linecpy, delim, &context);
 	int counter = 0;
 
 	// Add each arg from input to array
@@ -43,7 +44,7 @@ static int getargs() {
 	{
 		ch_arr[counter] = token;
 		counter ++;
-		token = strtok(NULL, " ");
+		token = strtok_r(NULL, delim, &context);
 	}
 	ch_arr[counter] = NULL;
 
