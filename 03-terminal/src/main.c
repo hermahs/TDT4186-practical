@@ -76,7 +76,7 @@ int main(int argc, char* argv) {
 				// }
 				// strncpy(fileinput, file_in(ch_arr[i + 1]), 256);
 				// ch_arr[i] = fileinput;
-				int j = i;
+				int j = i; // Skal være int j = i + 1 hvis det skal være med resten av koden over
 				while (ch_arr[j] != NULL) {
 					ch_arr[j] = ch_arr[j + 1];
 					j++;
