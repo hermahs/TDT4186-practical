@@ -60,8 +60,8 @@ int main(int argc, char* argv) {
 	while (1)
 	{
 		// Get current working directory
-		getcwd(cwd, sizeof(cwd));
 		cleanup_task_list();
+		getcwd(cwd, sizeof(cwd));
 		printf("%s: ", cwd);
 		// Leser inn bruker input, altså command med args
 		readline();
@@ -70,8 +70,8 @@ int main(int argc, char* argv) {
 		// this can be taken out into its own function (i think)
 		int i = 0;
 		while (ch_arr[i] != NULL) {
-			if (strcmp(ch_arr[i], "<") == 0){
-				if (ch_arr[i + 1] == NULL){
+			if (strcmp(ch_arr[i], "<") == 0) {
+				if (ch_arr[i + 1] == NULL) {
 					printf("Error, no filepath given");
 					break;
 				}
@@ -83,8 +83,8 @@ int main(int argc, char* argv) {
 					j++;
 				}
 			}
-			if (strcmp(ch_arr[i], ">") == 0){
-				if (ch_arr[i + 1] == NULL){
+			if (strcmp(ch_arr[i], ">") == 0) {
+				if (ch_arr[i + 1] == NULL) {
 					printf("Error, no filepath given");
 					break;
 				}
@@ -96,8 +96,9 @@ int main(int argc, char* argv) {
 			i++;
 		}
 
+		// can read from file in background but not create file in background
 		Data output = handle_command(ch_arr);
-		if (to_file == 1){
+		if (to_file == 1) {
 			file_out(to_file_path, output.output);
 			printf("%s\n", output.status);
 		} else {
