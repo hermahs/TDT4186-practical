@@ -10,17 +10,17 @@ char* file_in(char* filepath) {
     FILE *file = fopen(filepath, "rb");
 
     if (file == NULL) {
-        printf("Could not read file \n");
+        printf("Could not read file: %s \n", filepath);
     }
     fseek(file, 0, SEEK_END);
-    long fsize = ftell(file);
+    long fsize = ftell(f);
     fseek(file, 0, SEEK_SET);
 
     char *text = malloc(fsize + 1);
     fread(text, fsize, 1, file);
     fclose(file);
     text[fsize] = 0;
-
+    
     return text;
 }
 
