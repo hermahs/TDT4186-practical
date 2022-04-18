@@ -10,6 +10,8 @@
 #define MAX_SIZE 1024*1024
 #define err(e) do {fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 
+Task tasklist[MAX_TASKS];
+
 Task create_task(char* argc[]) {
     Task task;
 
@@ -35,29 +37,49 @@ Task create_task(char* argc[]) {
 char* get_task_output(Task task) {
     int status;
     char output[MAX_SIZE];
-    pid_t w;
-
-    w = waitpid(task.pid, &status, 0);
-
-    if (w == -1) err("waitpid");
 
     close(task.link[1]);
     int nbytes = read(task.link[0], output, sizeof(output));
     char* pretty_output = pretty_copy(output);
-    char* ending = add_status_ending(task.argc, status);
-    char* ret_output = malloc(sizeof(char) * (strlen(pretty_output) + strlen(ending) + 2));
-    sprintf(ret_output, "%s\n%s", pretty_output, ending);
-    free(pretty_output);
-    free(ending);
     memset(output, 0, strlen(output));
-    return ret_output;
+    return pretty_output;
 }
 
-int get_task_status(Task task) {
+char* get_task_status(Task task) {
     int status;
     pid_t w;
 
-    if ((w = waitpid(task.pid, &status, 0)) == -1) err("waitpid");
+    if ((w = waitpid(task.pid, &status, 0)) == -1) err("waitpid get_task_status");
 
-    return status;
+    return add_status_ending(task.argc, status);
+}
+
+void add_to_task_list(Task task) {
+
+    int task_index = 0;
+    while(tasklist[task_index].pid)
+        task_index++;
+    
+    if(task_index >= MAX_TASKS) {
+        printf("Task list is full!\n");
+        return;
+    }
+
+    tasklist[task_index] = task;
+    return;
+
+}
+
+void cleanup_task_list() {
+    // print output from stuff somewhere here
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (!tasklist[i].pid)
+            continue;
+        if (waitpid(tasklist[i].pid, NULL, WNOHANG) > 0)
+            tasklist[i].pid = 0;
+    }
+}
+
+Task get_from_task_list(int t) {
+    return tasklist[t];
 }

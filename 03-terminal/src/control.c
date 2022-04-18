@@ -10,8 +10,6 @@
 #define MAX_SIZE 1024*1024
 #define err(e) do {fprintf(stderr, "%s\n", e); exit(EXIT_FAILURE); } while (0);
 
-Task tasklist[16];
-
 char* add_status_ending(char* command, int status) {
 	char* ending_string = malloc(sizeof(char) * (19 + strlen(command) + 1)); // Exit status [
 	sprintf(ending_string, "Exit status [%s] = %d", command, status);
@@ -27,27 +25,44 @@ char* pretty_copy(char* input) {
 	return r;
 }
 
-char* handle_command(char* argc[]) {
+Data handle_command(char* argc[]) {
 
-	// check if background tasks are done
+	Data ret_data;
+	ret_data.output = malloc(sizeof(char));
+	sprintf(ret_data.output, "%s", "\0");
+	ret_data.status = malloc(sizeof(char));
+	sprintf(ret_data.status, "%s", "\0");
 
+	// gonna give us seg.faults in free in main
 	if (strcmp(argc[0], "cd") == 0) {
-		if (chdir(argc[1]) != 0)
-			return "could not find directory";
-		return "";
+		if (chdir(argc[1]) != 0) {
+			ret_data.output = malloc(sizeof(char) * 25);
+			sprintf(ret_data.output, "%s", "Could not find directory");
+		}
+		return ret_data;
 	} else if (strcmp(argc[0], "jobs") == 0) {
-		// add task to tasklist
-		return "job stuff coming\n";
+		ret_data.output = "Job stuff incoming";
+		ret_data.status = "";
+		return ret_data;
 	}
+
+	Task task;
 
 	// handle background task stuff here
-	if (argc[0][strlen(argc[0] - 1)] == '&') {
-
+	int len = 0;
+	while (argc[len] != NULL) {
+		len++;
+	}
+	
+	if (strcmp(argc[len - 1], "&") == 0) {
+		argc[len - 1] = NULL;
+		task = create_task(argc);
+		add_to_task_list(task);
 	} else {
-		Task task = create_task(argc);
-		return get_task_output(task);
+		task = create_task(argc);
+		ret_data.output = get_task_output(task);
+		ret_data.status = get_task_status(task);
 	}
 
-
-
+	return ret_data;
 }

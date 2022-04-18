@@ -91,12 +91,13 @@ int main(int argc, char* argv) {
 			}
 			i++;
 		}
-		char* output = handle_command(ch_arr);
-		printf("%s\n", output);
+		Data output = handle_command(ch_arr);
+		printf("%s\n", output.output);
 		if (to_file == 1){
-			file_out(to_file_path, output);
+			file_out(to_file_path, output.output);
 		}
-		free(output);
+		free(output.output);
+		free(output.status);
 	}
 	
 	return 0;

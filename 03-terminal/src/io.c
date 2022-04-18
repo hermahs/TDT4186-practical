@@ -13,7 +13,7 @@ char* file_in(char* filepath) {
         printf("Could not read file: %s \n", filepath);
     }
     fseek(file, 0, SEEK_END);
-    long fsize = ftell(f);
+    long fsize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     char *text = malloc(fsize + 1);
