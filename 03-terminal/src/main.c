@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "control.h"
+#include "io.h"
 
 static char cwd[256];
 static char line[256];
@@ -60,6 +61,16 @@ int main(int argc, char* argv) {
 		// Leser inn bruker input, altså command med args
 		readline();
 		getargs();
+		int i = 0;
+		while (ch_arr[i] != NULL) {
+			if (strcmp(ch_arr[i], "<") == 0){
+				printf("%s \n", file_in("test.txt"));
+			}
+			if (strcmp(ch_arr[i], ">") == 0){
+				file_out("test2.txt", "Ciao bella");
+			}
+			i++;
+		}
 		char* output = handle_command(ch_arr);
 		printf("%s\n", output);
 		free(output);
