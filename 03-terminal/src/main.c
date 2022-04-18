@@ -62,6 +62,7 @@ int main(int argc, char* argv) {
 		getargs();
 		char* output = handle_command(ch_arr);
 		printf("%s\n", output);
+		free(output);
 	}
 	
 	return 0;
