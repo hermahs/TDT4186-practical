@@ -5,9 +5,9 @@ OFILES:=$(patsubst src/%.c,build/%.o,$(CFILES))
 
 .PHONY: all clean
 
-all: build/terminal
+all: build/flush
 
-build/terminal: $(OFILES)
+build/flush: $(OFILES)
 	$(CC) $(LDFLAGS) $^ -o $@ -g -Wall
 
 build/%.o: src/%.c build

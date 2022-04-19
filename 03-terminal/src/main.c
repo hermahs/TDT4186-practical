@@ -2,22 +2,31 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <assert.h>
+#include <error.h>
+#include <errno.h>
+#include <stdbool.h>
 #include "control.h"
-#include "io.h"
 #include "tasks.h"
 
-static int to_file = 0;
-static char to_file_path[256];
-static char cwd[256];
-static char line[256];
-static char* ch_arr[256];
-static char fileinput[256];
-static size_t readline() {
+#define MAX_LINE_LENGTH 256
+#define MAX_TOKEN_COUNT 256
 
+// The line read from user
+static char line[MAX_LINE_LENGTH];
+// The user input, divided into a list of tokens, null terminated
+static char* argv[MAX_TOKEN_COUNT];
+
+// Get one whole line of input from the user, exits if the line is too long or EOF.
+// Consumes and removes the newline char.
+// Line is stored in `line`, with the length returned.
+static size_t readline() {
     // reads until it reads an EOF, a newline, or buffer is full
     char* result = fgets(line, sizeof(line), stdin);
-    if (result == NULL)
+    if (result == NULL) {
+		putchar('\n'); // A last newline to finish the prompt line
         exit(EXIT_FAILURE);
+	}
 
     // how long was the line we read?
     size_t len = strlen(line);
@@ -30,83 +39,116 @@ static size_t readline() {
     return len-1;
 }
 
+// Copies the read line into a list of tokens, argv, null terminated
+// Returns the amount of tokens found. Not reentrant
 static int getargs() {
 	char* context = NULL;
-	char* linecpy;
-    linecpy = (char*)malloc(sizeof(line));
-    strcpy(linecpy, line);
-	char delim[] = " \t";
-	char* token = strtok_r(linecpy, delim, &context);
+	static char linecopy[MAX_LINE_LENGTH];
+    strcpy(linecopy, line);
+
+	char* token = strtok_r(linecopy, " \t", &context);
 	int counter = 0;
 
 	// Add each arg from input to array
 	while (token != NULL)
 	{
-		ch_arr[counter] = token;
-		counter ++;
-		token = strtok_r(NULL, delim, &context);
+		assert(counter+1 < MAX_TOKEN_COUNT);
+		argv[counter++] = token;
+		token = strtok_r(NULL, " \t", &context);
 	}
-	ch_arr[counter] = NULL;
+	// Finally add null termination
+	argv[counter] = NULL;
 
 	return counter;
 }
 
-int main(int argc, char* argv) {
-	getcwd(cwd, sizeof(cwd));
-
-	while (1)
-	{
-		to_file = 0;
-		// Get current working directory
+int main(int flush_argc, char** flush_argv) {
+	// The Shell's main REPL
+	while (1) {
+		// Before doing anyting, check for finished jobs
 		cleanup_task_list();
+
+		// Get current working directory
+		char cwd[256];
 		getcwd(cwd, sizeof(cwd));
 		printf("%s: ", cwd);
-		// Leser inn bruker input, altså command med args
+		// Get a line of input from the user
 		readline();
-		getargs();
+		// Tokenizes the line, stored in argv
+		int argc = getargs();
 
-		// this can be taken out into its own function (i think)
-		int i = 0;
-		while (ch_arr[i] != NULL) {
-			if (strcmp(ch_arr[i], "<") == 0) {
-				// ch_arr[i] = ch_arr[i + 1];
-				// if (ch_arr[i + 1] == NULL) {
-				// 	printf("Error, no filepath given");
-				// 	break;
-				// }
-				// strncpy(fileinput, file_in(ch_arr[i + 1]), 256);
-				// ch_arr[i] = fileinput;
-				int j = i; // Skal være int j = i + 1 hvis det skal være med resten av koden over
-				while (ch_arr[j] != NULL) {
-					ch_arr[j] = ch_arr[j + 1];
-					j++;
-				}
-			}
-			if (strcmp(ch_arr[i], ">") == 0) {
-				if (ch_arr[i + 1] == NULL) {
-					printf("Error, no filepath given");
-					break;
-				}
-				to_file = 1; 
-				strncpy(to_file_path, ch_arr[i + 1], 256);
-				ch_arr[i] = ch_arr[i + 2];
-				ch_arr[i + 1] = NULL;
-			}
-			i++;
+		if (argc == 0) continue; // Ignore empty lines
+
+		// Check for trailing " &"
+		bool background = false;
+		if (strcmp(argv[argc-1], "&") == 0) {
+			argv[--argc] = NULL; // Move NULL terminator one back
+			background = true;
 		}
 
-		// can read from file in background but not create file in background
-		Data output = handle_command(ch_arr);
-		if (to_file == 1) {
-			file_out(to_file_path, output.output);
-			printf("%s\n", output.status);
+		char* inputpath = NULL;
+		char* outputpath = NULL;
+		bool pipeseen = false;
+
+		for(int i = 1; i < argc;) { // Look for file pipes
+			char* token = argv[i];
+			if (strcmp(token, "<") == 0) {
+				if (pipeseen) {
+					error(0, 0, "Can't use both input redirection and input pipes at once");
+					goto fail;
+				}
+				if (inputpath != NULL)  {
+					error(0, 0, "Can't use multiple input redirections");
+					goto fail;
+				}
+
+				inputpath = argv[i+1];
+				if (inputpath == NULL) {
+					error(0, 0, "error: no filepath given\n");
+					goto fail;
+				}
+			}
+			else if (strcmp(token, ">") == 0) {
+				outputpath = argv[i+1];
+				if (outputpath == NULL) {
+					error(0, 0, "error: no filepath given\n");
+					goto fail;
+				}
+			} else { // Anything other than "<" and ">"
+				if (strcmp(token, "|") == 0) {
+					pipeseen = true;
+					if (outputpath != NULL) {
+						error(0, 0, "Can't use both output redirection and output pipes at once");
+						goto fail;
+					}
+				}
+
+				i++;
+				continue;
+			}
+
+			// We only end up here if there was a "<" or ">"
+			for(int j = i; j+1 < argc; j++) // Remove the "<" or ">" and file path from list
+				argv[j] = argv[j+2];
+			argc -= 2; // we have two less tokens now
+		}
+
+		if (handle_builtin(argc, argv))
+			continue;
+
+		Task task;
+		bool result = handle_command(&task, argc, argv, inputpath, outputpath);
+		if (!result)
+			continue;
+
+		task.command = strdup(line);
+		if (background) {
+			add_to_task_list(task);
 		} else {
-			if(strcmp(output.output, "\0") != 0) {
-				printf("%s\n%s\n", output.output, output.status);
-			}
+			wait_for_task(&task);
 		}
-		free(output.output);
-		free(output.status);
+
+fail:;
 	}
 	
 	return 0;
